@@ -17,21 +17,3 @@ async def start_command(message: Message):
 
     await message.answer(text='Приветственный текст!!!!',
                          reply_markup=keyboard_build(MAIN_MENU_BUTTONS))
-#
-# @router.message(F.text == 'О нас', StateFilter(default_state))
-# async def about_command(message: Message):
-#     await message.answer(text=LEXICON_MS["about_us_message"],
-#                          reply_markup=inline_keyboard_build(LEXICON_BTN_REFREN))
-#
-#
-# @router.message(F.text == 'Услуги', StateFilter(default_state))
-# async def services_command(message: Message):
-#     await message.answer(text=LEXICON_MS["services_message"],
-#                          reply_markup=inline_keyboard_build(LEXICON_BTN_SERVICES))
-#
-#
-# @router.message(F.text == 'Кратко о стилях в дизайне интерьера', StateFilter(default_state))
-# async def services_command(message: Message):
-#     await message.answer_photo(photo=STYLES_DESIGN_INTERIOR['main_picture'],
-#                                caption=LEXICON_MS["styles_of_design_interior"],
-#                                reply_markup=inline_keyboard_build(LEXICON_BTN_STYLES_DESIGN_INTERIOR))
