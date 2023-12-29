@@ -1,13 +1,20 @@
 from aiogram.filters.callback_data import CallbackData
 from aiogram.utils.keyboard import ReplyKeyboardBuilder, ReplyKeyboardMarkup, \
     KeyboardButton, InlineKeyboardBuilder, InlineKeyboardButton, InlineKeyboardMarkup
-from db_logic import get_number_of_collection, get_number_of_topic, get_collection_by_number, get_id_by_audio
+from db_logic import get_number_of_collection, get_number_of_topic, get_collection_by_number, get_id_by_audio, \
+    get_dict_audios
 
 
 class SoundsCallbackFactory(CallbackData, prefix='a'):
     collection: str
     topic: str = '0'
     id_sound: str = '0'
+
+class FavourSoundsCallbackFactory(CallbackData, prefix='f'):
+    collection: str
+    topic: str
+    id_sound: str
+
 
 
 def keyboard_build(lexicon: dict) -> ReplyKeyboardMarkup:
@@ -121,6 +128,41 @@ def inline_pagination_soundlist_keyboard_build(num_collect: str,
     )
     return kb_builder.as_markup()
 
+
+
+
+
+
+def inline_pagination_favorite_soundlist_keyboard_build(buttons_dict_list: list[dict],
+                                                        index: int) -> InlineKeyboardMarkup:
+    """
+    Создает инлайн-клавиатуру для избранного списка аудио
+    :param callback_audiolist: str
+    :return:
+    """
+    kb_builder: InlineKeyboardBuilder = InlineKeyboardBuilder()
+    buttons = []
+    # buttons_dict = get_dict_audios(callback_audiolist)
+
+    # создаем кнопки, callback.data которых формируется из номера коллекции, номера темы, id аудио
+    for key, value in buttons_dict_list[index].items():
+        key_lst = key.split(':')
+        item = InlineKeyboardButton(text=value, callback_data=SoundsCallbackFactory(collection=key_lst[1],
+                                                                                        topic=key_lst[2],
+                                                                                        id_sound=key_lst[3]).pack())
+        buttons.append(item)
+
+    kb_builder.row(*buttons, width=1)
+    # создаем и добавляем кнопки пагинации
+    kb_builder.row(
+        InlineKeyboardButton(text='<<', callback_data='favorite_audio_list_back'),
+        InlineKeyboardButton(text=f'{index+1}/{len(buttons_dict_list)}', callback_data='pass'),
+        InlineKeyboardButton(text='>>', callback_data='favorite_audio_list_forward')
+    )
+    kb_builder.row(
+        InlineKeyboardButton(text='Редактировать список', callback_data='edit_favorite_audio_list')
+    )
+    return kb_builder.as_markup()
 
 
 if __name__ == '__main__':
