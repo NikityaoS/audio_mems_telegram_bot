@@ -1,6 +1,7 @@
 import datetime
 import pprint
 import pymongo
+import asyncio
 from bson import ObjectId
 from async_pymongo import AsyncClient
 from pprint import pprint
@@ -18,8 +19,8 @@ async def get_list_of_topics(collection: str):
     :return: list
     """
     collect = mongo_db_sounds[collection]
-    cursor_result = await collect.find()
-    list_of_doc = list(cursor_result)
+    cursor_result = collect.find()
+    list_of_doc = await cursor_result.to_list()
     lst = []
     for i in list_of_doc:
         lst.append(i['description'])
@@ -33,33 +34,33 @@ async def get_all_topics_list():
     """
     lst = []
     for collection in await mongo_db_sounds.list_collection_names():
-        topics = get_list_of_topics(collection)
+        topics = await get_list_of_topics(collection)
         lst.extend(topics)
     return lst
 
 
-def get_audiolist_of_topic(topic: str):
+async def get_audiolist_of_topic(topic: str):
     """
     Возвращает список названий стикеров определенного описания (description)
     :param topic:
     :return: list
     """
-    for collection in mongo_db_sounds.list_collection_names():
-        topics = get_list_of_topics(collection)
+    for collection in await mongo_db_sounds.list_collection_names():
+        topics = await get_list_of_topics(collection)
         if topic in topics:
             cursor_result = mongo_db_sounds[collection].find({'description': topic})
-            return [doc['sound'] for doc in list(cursor_result)]
+            return [doc['sound'] for doc in await cursor_result.to_list()]
 
 
 
-def get_all_names_of_audios():
+async def get_all_names_of_audios():
     lst = []
-    for topic in get_all_topics_list():
-        lst.extend(get_audiolist_of_topic(topic))
+    for topic in await get_all_topics_list():
+        lst.extend(await get_audiolist_of_topic(topic))
     return lst
 
 
-def brake_list_for_8_items_list(lst: list):
+async def brake_list_for_8_items_list(lst: list):
     """
     Разбивает список на подсписки максимум по 8 наименований
     и объединет их в один большой список
@@ -77,7 +78,7 @@ def brake_list_for_8_items_list(lst: list):
     return glob_list
 
 
-def brake_dict_for_8_items_list(dct: dict):
+async def brake_dict_for_8_items_list(dct: dict):
     keys_lst = [key for key in dct.keys()]
 
     glob_list = []
@@ -127,107 +128,111 @@ def brake_dict_for_8_items_list(dct: dict):
 
 
 
-def get_filename_of_sound(topic, sound):
-    for collection in mongo_db_sounds.list_collection_names():
-        topics = get_list_of_topics(collection)
+async def get_filename_of_sound(topic, sound):
+    for collection in await mongo_db_sounds.list_collection_names():
+        topics = await get_list_of_topics(collection)
         if topic in topics:
             cursor_result = mongo_db_sounds[collection].find({'description': topic, 'sound': sound})
-            return list(cursor_result)[0]['file']
+            result2 = await cursor_result.to_list()
+            return result2[0]['file']
 
 
-def get_number_of_collection(collection):
-    result = await mongo_db_num_info['numbers_for_collections'].find({'specific': 'str to int'})
-    return list(result)[0][collection]
+async def get_number_of_collection(collection):
+    result = mongo_db_num_info['numbers_for_collections'].find({'specific': 'str to int'})
+    result2 = await result.to_list()
+    return result2[0][collection]
 
 
-def get_collection_by_number(num):
-    result = mongo_db_num_info.numbers_for_collections.find({'specific': 'int to str'})
-    return list(result)[0][num]
+async def get_collection_by_number(num):
+    result = mongo_db_num_info['numbers_for_collections'].find({'specific': 'int to str'})
+    result2 = await result.to_list()
+    return result2[0][num]
 
 
-def get_number_of_topic(collect, topic):
-    result = mongo_db_num_info.numbers_for_topics.find({'base': collect, 'specific': 'str to int'})
-    return list(result)[0][topic]
+async def get_number_of_topic(collect, topic):
+    result = mongo_db_num_info['numbers_for_topics'].find({'base': collect, 'specific': 'str to int'})
+    result2 = await result.to_list()
+    return result2[0][topic]
 
 
-def get_topic_by_number(collect, num):
-    result = mongo_db_num_info.numbers_for_topics.find({'base': collect, 'specific': 'int to str'})
-    return list(result)[0][num]
+async def get_topic_by_number(collect, num):
+    result = mongo_db_num_info['numbers_for_topics'].find({'base': collect, 'specific': 'int to str'})
+    result2 = await result.to_list()
+    return result2[0][num]
 
 
-def get_audio_by_id(numb_collect, numb_topic, id):
-    collect = get_collection_by_number(numb_collect)
-    topic = get_topic_by_number(collect, numb_topic)
+async def get_audio_by_id(numb_collect, numb_topic, id):
+    collect = await get_collection_by_number(numb_collect)
+    topic = await get_topic_by_number(collect, numb_topic)
     result = mongo_db_sounds[collect].find({'description': topic, '_id': ObjectId(id)})
-    return result[0]['sound']
+    result2 = await result.to_list()
+    return result2[0]['sound']
 
 
-def get_id_by_audio(numb_collect, numb_topic, audio_name):
-    collect = get_collection_by_number(numb_collect)
-    topic = get_topic_by_number(collect, numb_topic)
+async def get_id_by_audio(numb_collect, numb_topic, audio_name):
+    collect = await get_collection_by_number(numb_collect)
+    topic = await get_topic_by_number(collect, numb_topic)
     result = mongo_db_sounds[collect].find({'description': topic, 'sound': audio_name})
-    return str(result[0]['_id'])
+    result2 = await result.to_list()
+    return result2[0]['_id']
 
 
-def convert_collections_to_numbers():
-    return [get_number_of_collection(collect) for collect in mongo_db_sounds.list_collection_names()]
+async def convert_collections_to_numbers():
+    return [get_number_of_collection(collect) for collect in await mongo_db_sounds.list_collection_names()]
 
 
-def get_col_name_by_topic(topic):
-    for collection in mongo_db_sounds.list_collection_names():
-        topics = get_list_of_topics(collection)
+async def get_col_name_by_topic(topic):
+    for collection in await mongo_db_sounds.list_collection_names():
+        topics = await get_list_of_topics(collection)
         if topic in topics:
             return collection
 
-def add_favorite_audio_to_list(user_id, audio):
-    mongo_db_users_info.users_info.update_one(
+async def add_favorite_audio_to_list(user_id, audio):
+    await mongo_db_users_info['users_info'].update_one(
         {"_id": user_id}, {"$push": {"favorites": audio}}
     )
 
 
-def check_is_there_audio_in_favorlist(user_id, audio):
-    result = mongo_db_users_info.users_info.find(
+async def check_is_there_audio_in_favorlist(user_id, audio):
+    result = mongo_db_users_info['users_info'].find(
         {"_id": user_id, "favorites": audio}
     )
-    for doc in result:
+    for doc in await result.to_list():
         return doc['_id']
 
 
 
-def show_users_info():
-    result = mongo_db_users_info.users_info.find()
-    for i in list(result):
+async def show_users_info():
+    result = mongo_db_users_info['users_info'].find()
+    for i in await result.to_list():
         print(i)
 
 
-def get_callback_info_favorite_sound_list(user_id):
-    cursor_result = mongo_db_users_info.users_info.find({'_id': user_id})
-    for doc in cursor_result:
+async def get_callback_info_favorite_sound_list(user_id):
+    cursor_result = mongo_db_users_info['users_info'].find({'_id': user_id})
+    for doc in await cursor_result.to_list():
         return doc['favorites']
 
 
 
 
-def get_dict_audios(lst):
+async def get_dict_audios(lst):
     main_lst = [i.split(':') for i in lst]
     main_dict = {}
     for i in main_lst:
-        audio_name = get_audio_by_id(i[1], i[2], i[3])
+        audio_name = await get_audio_by_id(i[1], i[2], i[3])
         joined = ':'.join(i)
         main_dict.update({joined: audio_name})
     return main_dict
 
 
+async def delete_elem_from_favour_soundlist(user_id: str, audio: str):
+    await mongo_db_users_info['users_info'].update_one(
+        {"_id": user_id}, {"$pull": {"favorites": audio}}
+    )
 
 
 
 if __name__ == '__main__':
-    pass
-    # lst = ['f:1:1:657f0a227f404accffbd8697', 'f:1:1:657f0a227f404accffbd8694',
-    #        'f:1:1:657f0a227f404accffbd8692']
-    # print(get_callback_info_favorite_sound_list('806012412'))
-    # print(get_dict_audios(lst))
-    # dct = get_dict_audios(get_callback_info_favorite_sound_list('806012412'))
-    # print(dct)
-    # print(brake_dict_for_8_items_list(dct))
-    # print(get_callback_info_favorite_sound_list('806012412'))
+    res = asyncio.run(delete_elem_from_favour_soundlist('806012412', 'f:1:1:657f0a227f404accffbd8692'))
+    print(res)
