@@ -1,26 +1,43 @@
 from aiogram.filters.callback_data import CallbackData
 from aiogram.utils.keyboard import ReplyKeyboardBuilder, ReplyKeyboardMarkup, \
     KeyboardButton, InlineKeyboardBuilder, InlineKeyboardButton, InlineKeyboardMarkup
-from db_logic import get_number_of_collection, get_number_of_topic, get_collection_by_number, get_id_by_audio, \
-    get_dict_audios
+from db_logic import get_number_of_collection, get_number_of_topic, get_collection_by_number, get_id_by_audio
 
 
 class SoundsCallbackFactory(CallbackData, prefix='a'):
+    """
+    Используется для списков аудио при выборе из разделов
+    """
     collection: str
     topic: str = '0'
     id_sound: str = '0'
 
 
 class FavourSoundsCallbackFactory(CallbackData, prefix='f'):
+    """
+    Используется для списка избранных аудио
+    """
     collection: str
     topic: str
     id_sound: str
 
 
 class DelSoundsCallbackFactory(CallbackData, prefix='d'):
+    """
+    Используется для режима удаления в списке избранных аудио
+    """
     collection: str
     topic: str
     id_sound: str
+
+
+class SearchedSoundsPaginationCallbackFactory(CallbackData, prefix='s'):
+    """
+    Используется в пагинации списка аудио, сформированного по поиску
+    """
+    user_id: str
+    searched_word: str
+    direction: str
 
 
 
@@ -36,7 +53,9 @@ def keyboard_build(lexicon: dict) -> ReplyKeyboardMarkup:
     keys = list(lexicon.keys())
     buttons = [KeyboardButton(text=lexicon[key]) for key in keys]
     # методом билдера добавляем в него кнопки (список списков) и формируем клавиатуру
-    return kb_builder.row(*buttons, width=2).as_markup(resize_keyboard=True)
+    return kb_builder.row(*buttons, width=2).as_markup(
+        resize_keyboard=True,
+        input_field_placeholder='🔍 поиск')
 
 
 async def inline_collections_keyboard_build(lexicon: list, width: int) -> InlineKeyboardMarkup:
@@ -207,7 +226,7 @@ async def inline_pagination_favor_soundlist_delition_keyboard_build(buttons_dict
     for key, value in buttons_dict_list[index].items():
         key_lst = key.split(':')
         item = InlineKeyboardButton(
-            text=f'❌ Удалить {value}',
+            text=f'❌ {value}',
             callback_data=DelSoundsCallbackFactory(collection=key_lst[1], topic=key_lst[2], id_sound=key_lst[3]).pack())
         buttons.append(item)
 
@@ -218,8 +237,46 @@ async def inline_pagination_favor_soundlist_delition_keyboard_build(buttons_dict
         InlineKeyboardButton(text=f'{index+1}/{len(buttons_dict_list)}', callback_data='pass'),
         InlineKeyboardButton(text='>>', callback_data='del_audio_list_forward')
     )
+    kb_builder.row(InlineKeyboardButton(text='⬅ Назад', callback_data='cancel_edit_favor_audio_list'))
+    return kb_builder.as_markup()
+
+
+async def inline_pagination_searched_soundlist_keyboard_build(buttons_dict_list: list[dict],
+                                                              index: int,
+                                                              searched_word: str,
+                                                              user_id: str) -> InlineKeyboardMarkup:
+    """
+    Создает инлайн-клавиатуру из списка аудио, сформированного по поиску
+    :param buttons_dict_list: list[dict]
+    :param index: int
+    :return:
+    """
+    kb_builder: InlineKeyboardBuilder = InlineKeyboardBuilder()
+    buttons = []
+
+    # создаем кнопки, callback.data которых формируется из номера коллекции, номера темы, id аудио
+    for key, value in buttons_dict_list[index].items():
+        key_lst = key.split(':')
+        item = InlineKeyboardButton(
+            text=f'{value}',
+            callback_data=SoundsCallbackFactory(collection=key_lst[1], topic=key_lst[2], id_sound=key_lst[3]).pack())
+        buttons.append(item)
+
+    kb_builder.row(*buttons, width=1)
+    # создаем и добавляем кнопки пагинации
     kb_builder.row(
-        InlineKeyboardButton(text='🔙 Отменить редактирование', callback_data='cancel_edit_favor_audio_list')
+        InlineKeyboardButton(text='<<', callback_data=SearchedSoundsPaginationCallbackFactory(
+            user_id=user_id,
+            searched_word=searched_word,
+            direction='back'
+        ).pack()),
+        InlineKeyboardButton(text=f'{index+1}/{len(buttons_dict_list)}', callback_data='pass'),
+        InlineKeyboardButton(text='>>', callback_data=SearchedSoundsPaginationCallbackFactory(
+            user_id=user_id,
+            searched_word=searched_word,
+            direction='forward'
+        ).pack())
+
     )
     return kb_builder.as_markup()
 

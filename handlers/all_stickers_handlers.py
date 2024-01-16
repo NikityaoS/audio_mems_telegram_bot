@@ -1,14 +1,12 @@
-
-from .decorators import *
 from aiogram import Router, F
-from aiogram.types import Message, CallbackQuery, FSInputFile, \
-    InlineKeyboardButton, InlineKeyboardMarkup
+from aiogram.types import CallbackQuery, FSInputFile, \
+    InlineKeyboardButton, InlineKeyboardMarkup, Message
 from keyboards.keyboards import inline_pagination_soundlist_keyboard_build, SoundsCallbackFactory, \
     inline_collections_keyboard_build, inline_pagination_topics_keyboard_build, FavourSoundsCallbackFactory
 from db_logic import mongo_db_sounds, get_list_of_topics, get_audiolist_of_topic, \
     brake_list_for_8_items_list, get_filename_of_sound, get_collection_by_number, \
     get_topic_by_number, get_audio_by_id, get_col_name_by_topic, get_number_of_collection, add_favorite_audio_to_list, \
-    check_is_there_audio_in_favorlist
+    check_is_there_audio_in_favorlist, get_telegram_file_id, set_telegram_file_id
 
 # Инициализируем роутер уровня модуля
 router: Router = Router()
@@ -16,26 +14,12 @@ router: Router = Router()
 
 
 
-@router.message(F.text == '🎵 Все аудио-стикеры')
-@check_subscrib_to_channel_1param
-async def show_collections_list(message: Message):
-    """
-    Выводит меню со списком коллекций
-    :param message: Message
-    :return:
-    """
-    await message.delete()
-    coll_names = await mongo_db_sounds.list_collection_names()
-    markup = await inline_collections_keyboard_build(coll_names, width=1)
-    await message.answer(text='👇 Выберите раздел', reply_markup=markup)
-
 
 # Задаем фильтр на callback.data, созданный фабриокой, в частности,
 # на его атрибуты topic, id_sound. Подразумевается, что аргумент
 # collection непустой.
 @router.callback_query(SoundsCallbackFactory.filter(F.topic == '0'),
                        SoundsCallbackFactory.filter(F.id_sound == '0'))
-@check_subscrib_to_channel_2param
 async def show_topics_list(callback: CallbackQuery,
                            callback_data: SoundsCallbackFactory):
     """
@@ -58,11 +42,10 @@ async def show_topics_list(callback: CallbackQuery,
             width=1,
             # получаем первый список в списке pages_of_audiolist
             index=0)
-)
+    )
 
 
 @router.callback_query(SoundsCallbackFactory.filter(F.topic == 'forward_topic_list'))
-@check_subscrib_to_channel_2param
 async def get_next_page_topic_list(callback: CallbackQuery,
                                    callback_data: SoundsCallbackFactory):
     # получаем имя коллекции
@@ -102,9 +85,8 @@ async def get_next_page_topic_list(callback: CallbackQuery,
 
 
 @router.callback_query(SoundsCallbackFactory.filter(F.topic == 'back_topic_list'))
-@check_subscrib_to_channel_2param
 async def get_previous_page_topic_list(callback: CallbackQuery,
-                                   callback_data: SoundsCallbackFactory):
+                                       callback_data: SoundsCallbackFactory):
     # получаем имя коллекции
     collect_name = await get_collection_by_number(callback_data.collection)
     # разбиваем спискок тем из коллекции на подсписки (страницы) максимум по 8 элементов
@@ -139,11 +121,9 @@ async def get_previous_page_topic_list(callback: CallbackQuery,
         )
 
 
-
 # Задаем фильтр, также на атрибут класса-фабрики id_sound. Подразумевается,
 # что атрибуты collection, topic заполнены.
 @router.callback_query(SoundsCallbackFactory.filter(F.id_sound == '0'))
-@check_subscrib_to_channel_2param
 async def show_sounds_list(callback: CallbackQuery,
                            callback_data: SoundsCallbackFactory):
     """
@@ -168,8 +148,6 @@ async def show_sounds_list(callback: CallbackQuery,
 
 
 @router.callback_query(SoundsCallbackFactory.filter(F.id_sound == 'forward'))
-@check_subscrib_to_channel_2param
-@check_date_pagination_btn_2param
 async def get_next_page_sound_list(callback: CallbackQuery,
                                    callback_data: SoundsCallbackFactory):
     """
@@ -213,9 +191,8 @@ async def get_next_page_sound_list(callback: CallbackQuery,
                 index=0)
         )
 
+
 @router.callback_query(SoundsCallbackFactory.filter(F.id_sound == 'back'))
-@check_subscrib_to_channel_2param
-@check_date_pagination_btn_2param
 async def get_previous_page_sound_list(callback: CallbackQuery,
                                        callback_data: SoundsCallbackFactory):
     """
@@ -252,7 +229,6 @@ async def get_previous_page_sound_list(callback: CallbackQuery,
 
 # отлавливает апдейт кнопи возврата к меню со списком коллекций (разделов)
 @router.callback_query(F.data == 'back_to_collection_menu')
-@check_subscrib_to_channel_1param
 async def back_to_collection_menu(callback: CallbackQuery):
     """
     Выводит инлайй-меню со списком коллекций
@@ -261,13 +237,12 @@ async def back_to_collection_menu(callback: CallbackQuery):
     :return:
     """
     markup = await inline_collections_keyboard_build(await mongo_db_sounds.list_collection_names(), width=1)
-    await callback.message.edit_text(text='📌 Выберите раздел')
+    await callback.message.edit_text(text='🗂️ Выберите раздел')
     await callback.message.edit_reply_markup(reply_markup=markup)
 
 
 # отлавливает апдейт кнопки возврата к меню со списком тем
 @router.callback_query(F.data == 'back_to_topic_menu')
-@check_subscrib_to_channel_1param
 async def back_to_topic_menu(callback: CallbackQuery):
     """
     Выводит инлайй-меню со списком тем коллекции
@@ -295,7 +270,6 @@ async def back_to_topic_menu(callback: CallbackQuery):
 
 # предполагается, в фильтр попает collback.data со всеми заполенными атрибутами
 @router.callback_query(SoundsCallbackFactory.filter())
-@check_subscrib_to_channel_2param
 async def get_audio_file(callback: CallbackQuery, callback_data: SoundsCallbackFactory):
     """
     Возвращает аудио-файл
@@ -309,8 +283,8 @@ async def get_audio_file(callback: CallbackQuery, callback_data: SoundsCallbackF
     topic = await get_topic_by_number(collection, callback_data.topic)
     # по номерам коллекции, темы и id аудио получаем название аудио
     name_sound = await get_audio_by_id(callback_data.collection,
-                                         callback_data.topic,
-                                         callback_data.id_sound)
+                                       callback_data.topic,
+                                       callback_data.id_sound)
     # по теме и названию аудио получаем название файла
     file_name = await get_filename_of_sound(topic, name_sound)
 
@@ -320,42 +294,55 @@ async def get_audio_file(callback: CallbackQuery, callback_data: SoundsCallbackF
             collection=callback_data.collection,
             topic=callback_data.topic,
             id_sound=callback_data.id_sound
-                                  ).pack()
+        ).pack()
     )
 
     keyboard = InlineKeyboardMarkup(inline_keyboard=[[button]])
+    telegram_file_id = await get_telegram_file_id(collection, callback_data.id_sound)
+    if not telegram_file_id:
+        result = await callback.message.answer_voice(
+            voice=FSInputFile(f'audio/{topic}/{file_name}'),
+            reply_markup=keyboard)
+        await set_telegram_file_id(result.voice.file_id,
+                                   result.voice.file_unique_id,
+                                   collection,
+                                   callback_data.id_sound)
+    else:
+        await callback.message.answer_voice(
+            voice=telegram_file_id,
+            reply_markup=keyboard)
 
-    await callback.message.answer_audio(
-        audio=FSInputFile(f'audio/{topic}/{file_name}'),
-        title=f'{name_sound}',
-        caption='https://t.me/exprrrrrrr_bot',
-        performer=f'{topic}',
-        thumbnail=FSInputFile(f'audio/{topic}/{topic}.jpeg'),
-        reply_markup=keyboard)
     await callback.answer()
 
 
 @router.callback_query(FavourSoundsCallbackFactory.filter())
 async def set_audio_to_favorites_list(callback: CallbackQuery,
-                                       callback_data: FavourSoundsCallbackFactory):
+                                      callback_data: FavourSoundsCallbackFactory):
+    """
+    Добавляет аудио в список избранного
+    :param callback: CallbackQuery
+    :param callback_data: FavourSoundsCallbackFactory
+    :return:
+    """
     result = await check_is_there_audio_in_favorlist(str(callback.message.chat.id),
-                                      callback_data.pack())
+                                                     callback_data.pack())
+    selected_audio = await get_audio_by_id(callback_data.collection, callback_data.topic, callback_data.id_sound)
     if result:
-        await callback.answer('😉 Аудио уже есть в списке избранного!', show_alert=True)
+        await callback.answer(f'😉 Аудио "{selected_audio}" уже есть в списке избранного!', show_alert=True)
     else:
         await add_favorite_audio_to_list(str(callback.message.chat.id),
-                                   callback_data.pack())
-        await callback.answer('✅ Аудио добавлено в избранное!', show_alert=True)
+                                         callback_data.pack())
+        await callback.answer(f'✅ Аудио "{selected_audio}" добавлено в избранное!', show_alert=True)
 
 
-# отлавливает апдейт инлайн-кнопки с номером и количеством страниц
 @router.callback_query(F.data == 'pass')
 async def skip_waiting_from_page_num_button(callback: CallbackQuery):
+    """
+    Отлавливает апдейт инлайн-кнопки с номером и количеством страниц
+    :param callback: CallbackQuery
+    :return:
+    """
     await callback.answer()
 
-
 # отлавливает остальные апдейты от инлайн-кнопок
-# @router.callback_query()
-# async def skip_waiting_from_inline_button(callback: CallbackQuery):
-#     await callback.answer()
-#     print(callback.data)
+
