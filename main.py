@@ -5,7 +5,7 @@ from aiogram.types import BotCommand
 
 from config_data.config import Config, load_config
 from handlers import main_menu_handlers, all_stickers_handlers, favorite_audiolist_handlers, search_audio_handlers, \
-    inline_query_handlers
+    inline_query_handlers, admin_handlers
 from middlewares.antiflood_middleware import AntifloodMiddleware
 from middlewares.check_valid_inline_buttons_middlewares import CheckValidInlineButtonsMiddleware
 from middlewares.subscribe_to_group_middleware import SubscribeMiddleware
@@ -49,6 +49,7 @@ async def main(bot):
     dp.include_router(favorite_audiolist_handlers.router)
     dp.include_router(search_audio_handlers.router)
     dp.include_router(inline_query_handlers.router)
+    dp.include_router(admin_handlers.router)
 
     # Регистрируем кнопку Menu
     dp.startup.register(set_main_menu)

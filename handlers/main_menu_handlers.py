@@ -30,7 +30,6 @@ async def show_collections_list(message: Message):
     markup = await inline_collections_keyboard_build(coll_names, width=1)
     await message.answer(text='🗂️ Выберите раздел', reply_markup=markup)
 
-
 @router.message(F.text == '⭐ Избранное')
 async def show_favorite_sounds_list(message: Message):
     """
@@ -57,7 +56,7 @@ async def show_favorite_sounds_list(message: Message):
 
 @router.message(F.text == '📩 Для отзывов')
 async def show_connect_message(message: Message):
-    button = InlineKeyboardButton(url='https://t.me/AudioStikers_news/7', text='🔗 Ссылка')
+    button = InlineKeyboardButton(url='https://t.me/astib_bot/6', text='🔗 Ссылка')
     keyboard = InlineKeyboardMarkup(inline_keyboard=[[button]])
     await message.answer(text='💬 Переходите по ссылке и оставляйте комментарии под сообщением!',
                          reply_markup=keyboard)

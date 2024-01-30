@@ -10,7 +10,8 @@ from db_logic import get_dict_audios, brake_dict_for_8_items_list, get_callback_
 router: Router = Router()
 
 
-@router.message(~F.text.in_({'🔊 Все аудио-стикеры', '⭐ Избранное', '📩 Обратная связь'}))
+@router.message(~F.text.in_({'🔊 Все аудио-стикеры', '⭐ Избранное', '📩 Обратная связь'}),
+                lambda message: message.text)
 async def show_searched_sounds_list(message: Message):
     """
     Выводит меню-список с найденными по поиску аудио
@@ -18,7 +19,7 @@ async def show_searched_sounds_list(message: Message):
     :return:
     """
     searched_sound_list = await get_callback_info_searched_audio_list(message.text)
-
+    print(message)
     if not searched_sound_list:
         await message.answer(text='😔 Аудио по вашему запросу не найдено!')
     else:

@@ -48,7 +48,7 @@ class AntifloodMiddleware(BaseMiddleware):
 
         async def check_flood_and_handle(event, user_id):
             # Начинаем с обработки команды /start без флуд-контроля
-            if event.message and event.message.text == '/start':
+            if event.message and (event.message.text == '/start' or event.message.text == '/start q'):
                 return await handler(event, data)
 
             # Проверка блокировки пользователя

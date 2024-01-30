@@ -13,7 +13,7 @@ router: Router = Router()
 async def pagination_demo(inline_query: InlineQuery,
                           audio_lst: list[tuple]):
 
-    ITEMS_PER_PAGE = 50  # Количество результатов на одной странице.
+    items_per_page = 50  # Количество результатов на одной странице.
     offset = int(inline_query.offset) if inline_query.offset else 0
 
     result_audio_lst = []
@@ -31,18 +31,18 @@ async def pagination_demo(inline_query: InlineQuery,
     else:
 
         # Ограничиваем результаты текущей "страницей"
-        current_page_results = result_audio_lst[offset:offset + ITEMS_PER_PAGE]
+        current_page_results = result_audio_lst[offset:offset + items_per_page]
 
         # Вычисляем следующий offset
         # Если это последняя страница результатов, следующий offset будет пустой строкой
-        next_offset = str(offset + ITEMS_PER_PAGE) if len(audio_lst) > offset + ITEMS_PER_PAGE else ""
+        next_offset = str(offset + items_per_page) if len(audio_lst) > offset + items_per_page else ""
 
         await inline_query.answer(
             results=current_page_results,
-            cache_time=20,
+            cache_time=0,
             next_offset=next_offset,
             switch_pm_parameter="t",
-            switch_pm_text="Ссылка на бот"
+            switch_pm_text="Audio Stickers Box"
         )
 
 

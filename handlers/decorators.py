@@ -38,13 +38,13 @@ def check_get_searched_audio_list_for_pagination(func):
     :return:
     """
     async def wrapper(callback: CallbackQuery):
-        searched_sound_list = get_searched_audio_in_redis(user_id=callback.message.chat.id,
+        searched_sound_list = get_searched_audio_in_redis(user_id=str(callback.message.chat.id),
                                                           searched_word=callback.message.text)
         # если в списке нет аудио, то при его удалении присылается соответствующее сообщение
         if not searched_sound_list:
             await callback.answer(text='⌛ Срок действия клавиатуры истек! Повторите команду!', show_alert=True)
         else:
-            searched_dct = await get_dict_audios(searched_sound_list)
+            searched_dct = await get_dict_audios(list(searched_sound_list))
             pages_dict_favor_audio = await brake_dict_for_8_items_list(searched_dct)
             # получаем строку предыдущего подсписка (страницы) в формате "3/10"
             str_pages = callback.message.reply_markup.inline_keyboard[-1][-2].text
