@@ -1,7 +1,7 @@
 from aiogram.filters.callback_data import CallbackData
 from aiogram.utils.keyboard import ReplyKeyboardBuilder, ReplyKeyboardMarkup, \
     KeyboardButton, InlineKeyboardBuilder, InlineKeyboardButton, InlineKeyboardMarkup
-from db_logic import get_number_of_collection, get_number_of_topic, get_collection_by_number, get_id_by_audio
+from db.db_logic import get_number_of_collection, get_number_of_topic, get_collection_by_number, get_id_by_audio
 
 
 class SoundsCallbackFactory(CallbackData, prefix='a'):
@@ -43,7 +43,7 @@ class SearchedSoundsPaginationCallbackFactory(CallbackData, prefix='s'):
 
 def keyboard_build(lexicon: dict) -> ReplyKeyboardMarkup:
     """
-    Создает обычную калавиатуру
+    Создает обычную клавиатуру
     :param lexicon: dict
     :return: ReplyKeyboardMarkup
     """
@@ -83,7 +83,7 @@ async def inline_pagination_topics_keyboard_build(topic_list: list[list],
                                             index: int) -> InlineKeyboardMarkup:
     """
     Создает инлайн-клавиатуру для тем
-    :param topic_list: list - список списов тем (страницы с темами)
+    :param topic_list: list - список списков тем (страницы с темами)
     :param num_collect: str - номер коллекции
     :param width: int - количество кнопок на одной строке
     :param index: int - индекс списка темы из общего списка (страницы)
