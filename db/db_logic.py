@@ -1,5 +1,4 @@
 import re
-import asyncio
 import redis
 from datetime import datetime
 from bson import ObjectId
@@ -45,7 +44,7 @@ async def get_list_of_topics(collection: str):
 
 async def get_all_topics_list():
     """
-    Возращает список description из всех коллекций
+    Возвращает список description из всех коллекций
     :return: list
     """
     lst = []
