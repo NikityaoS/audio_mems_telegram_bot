@@ -1,8 +1,7 @@
 from aiogram import Router, F
 from aiogram.filters import CommandStart
-from aiogram.types import Message, InlineKeyboardButton, InlineKeyboardMarkup
-
-from db_logic import add_user_to_db, mongo_db_sounds, get_callback_info_favorite_sound_list, get_dict_audios, \
+from aiogram.types import Message, InlineKeyboardButton, InlineKeyboardMarkup, FSInputFile
+from db.db_logic import add_user_to_db, mongo_db_sounds, get_callback_info_favorite_sound_list, get_dict_audios, \
     brake_dict_for_8_items_list
 from lexicon.lexicon import *
 from keyboards.keyboards import keyboard_build, inline_collections_keyboard_build, \
@@ -15,11 +14,13 @@ router: Router = Router()
 @router.message(CommandStart())
 async def start_command(message: Message):
     await add_user_to_db(str(message.chat.id), message.from_user.username)
-    await message.answer(text='👋🏻',
-                         reply_markup=keyboard_build(MAIN_MENU_BUTTONS))
+    await message.answer(
+        text="👋",
+        reply_markup=keyboard_build(MAIN_MENU_BUTTONS)
+    )
 
 
-@router.message(F.text == '🔊 Все аудио-стикеры')
+@router.message(F.text == '🔊 Все аудио-мемы')
 async def show_collections_list(message: Message):
     """
     Выводит меню со списком коллекций
@@ -29,6 +30,7 @@ async def show_collections_list(message: Message):
     coll_names = await mongo_db_sounds.list_collection_names()
     markup = await inline_collections_keyboard_build(coll_names, width=1)
     await message.answer(text='🗂️ Выберите раздел', reply_markup=markup)
+
 
 @router.message(F.text == '⭐ Избранное')
 async def show_favorite_sounds_list(message: Message):
@@ -56,18 +58,29 @@ async def show_favorite_sounds_list(message: Message):
 
 @router.message(F.text == '📩 Для отзывов')
 async def show_connect_message(message: Message):
-    button = InlineKeyboardButton(url='https://t.me/astib_bot/6', text='🔗 Ссылка')
+    """
+    Выводит сообщение со ссылкой на сообщение в канале
+    :param message:
+    :return:
+    """
+    button = InlineKeyboardButton(url='https://t.me/+9kGSXhtU20FhZDUy', text='🔗 Ссылка')
     keyboard = InlineKeyboardMarkup(inline_keyboard=[[button]])
-    await message.answer(text='💬 Переходите по ссылке и оставляйте комментарии под сообщением!',
+    await message.answer(text='💬 Переходите по ссылке и оставляйте комментарии!',
                          reply_markup=keyboard)
 
 
 @router.message(F.text == '/help')
 async def show_connect_message(message: Message):
+    """
+    Выводит сообщение со справочной информацией
+    Присылает GIF-инструкцию
+    :param message:
+    :return:
+    """
     await message.answer(text=f'{HELP_INFO}')
-
-
-
-# @router.message()
-# async def skip_waiting_from_inline_button(message: Message):
-#     print(message)
+    placeholder = await message.answer(text="Загрузка GIF-инструкции..")
+    await message.answer_animation(
+        animation=FSInputFile("public/help.gif"),
+        caption="GIF-инструкция по использованию"
+    )
+    await placeholder.delete()

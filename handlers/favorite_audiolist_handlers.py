@@ -3,7 +3,7 @@ from aiogram.types import CallbackQuery
 from handlers.decorators import check_get_favorite_audio_list_for_pagination
 from keyboards.keyboards import inline_pagination_favorite_soundlist_keyboard_build, \
     inline_pagination_favor_soundlist_delition_keyboard_build, DelSoundsCallbackFactory
-from db_logic import get_callback_info_favorite_sound_list, get_dict_audios, \
+from db.db_logic import get_callback_info_favorite_sound_list, get_dict_audios, \
     brake_dict_for_8_items_list, delete_elem_from_favour_soundlist, get_audio_by_id
 
 # Инициализируем роутер уровня модуля

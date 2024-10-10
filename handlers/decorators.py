@@ -1,5 +1,5 @@
 from aiogram.types import CallbackQuery, InlineQuery
-from db_logic import get_callback_info_favorite_sound_list, get_dict_audios, brake_dict_for_8_items_list, \
+from db.db_logic import get_callback_info_favorite_sound_list, get_dict_audios, brake_dict_for_8_items_list, \
     get_searched_audio_in_redis, get_all_audio_info, get_searched_audio_by_inline_query, \
     get_file_id_favour_audio_list_by_callbackinf
 
@@ -40,7 +40,7 @@ def check_get_searched_audio_list_for_pagination(func):
     async def wrapper(callback: CallbackQuery):
         searched_sound_list = get_searched_audio_in_redis(user_id=str(callback.message.chat.id),
                                                           searched_word=callback.message.text)
-        # если в списке нет аудио, то при его удалении присылается соответствующее сообщение
+        # если в списке нет аудио, то присылается соответствующее сообщение
         if not searched_sound_list:
             await callback.answer(text='⌛ Срок действия клавиатуры истек! Повторите команду!', show_alert=True)
         else:

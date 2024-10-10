@@ -3,7 +3,7 @@ from aiogram.types import CallbackQuery, Message
 from handlers.decorators import check_get_searched_audio_list_for_pagination
 from keyboards.keyboards import inline_pagination_searched_soundlist_keyboard_build, \
     SearchedSoundsPaginationCallbackFactory
-from db_logic import get_dict_audios, brake_dict_for_8_items_list, get_callback_info_searched_audio_list, \
+from db.db_logic import get_dict_audios, brake_dict_for_8_items_list, get_callback_info_searched_audio_list, \
     set_searched_audio_in_redis
 
 # Инициализируем роутер уровня модуля

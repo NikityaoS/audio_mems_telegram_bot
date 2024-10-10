@@ -1,9 +1,9 @@
 from aiogram import Router, F
 from aiogram.types import CallbackQuery, FSInputFile, \
-    InlineKeyboardButton, InlineKeyboardMarkup, Message
+    InlineKeyboardButton, InlineKeyboardMarkup
 from keyboards.keyboards import inline_pagination_soundlist_keyboard_build, SoundsCallbackFactory, \
     inline_collections_keyboard_build, inline_pagination_topics_keyboard_build, FavourSoundsCallbackFactory
-from db_logic import mongo_db_sounds, get_list_of_topics, get_audiolist_of_topic, \
+from db.db_logic import mongo_db_sounds, get_list_of_topics, get_audiolist_of_topic, \
     brake_list_for_8_items_list, get_filename_of_sound, get_collection_by_number, \
     get_topic_by_number, get_audio_by_id, get_col_name_by_topic, get_number_of_collection, add_favorite_audio_to_list, \
     check_is_there_audio_in_favorlist, get_telegram_file_id, set_telegram_file_id
@@ -15,7 +15,7 @@ router: Router = Router()
 
 
 
-# Задаем фильтр на callback.data, созданный фабриокой, в частности,
+# Задаем фильтр на callback.data, созданный фабрикой, в частности,
 # на его атрибуты topic, id_sound. Подразумевается, что аргумент
 # collection непустой.
 @router.callback_query(SoundsCallbackFactory.filter(F.topic == '0'),
@@ -30,7 +30,7 @@ async def show_topics_list(callback: CallbackQuery,
     """
     # получаем имя коллекции
     collect_name = await get_collection_by_number(callback_data.collection)
-    # разбиваем спискок тем из коллекции на подсписки (страницы) максимум по 8 элементов
+    # разбиваем список тем из коллекции на подсписки (страницы) максимум по 8 элементов
     # и объединяем их в общий список
     pages_of_topiclist = await brake_list_for_8_items_list(await get_list_of_topics(collect_name))
 
@@ -40,7 +40,7 @@ async def show_topics_list(callback: CallbackQuery,
             topic_list=pages_of_topiclist,
             num_collect=callback_data.collection,
             width=1,
-            # получаем первый список в списке pages_of_audiolist
+            # получаем первый список в списке pages_of_topiclist
             index=0)
     )
 
@@ -48,9 +48,15 @@ async def show_topics_list(callback: CallbackQuery,
 @router.callback_query(SoundsCallbackFactory.filter(F.topic == 'forward_topic_list'))
 async def get_next_page_topic_list(callback: CallbackQuery,
                                    callback_data: SoundsCallbackFactory):
+    """
+    Выводит следующую страницу со списком тем
+    :param callback:
+    :param callback_data:
+    :return:
+    """
     # получаем имя коллекции
     collect_name = await get_collection_by_number(callback_data.collection)
-    # разбиваем спискок тем из коллекции на подсписки (страницы) максимум по 8 элементов
+    # разбиваем список тем из коллекции на подсписки (страницы) максимум по 8 элементов
     # и объединяем их в общий список
     pages_of_topiclist = await brake_list_for_8_items_list(await get_list_of_topics(collect_name))
 
@@ -65,7 +71,7 @@ async def get_next_page_topic_list(callback: CallbackQuery,
                 topic_list=pages_of_topiclist,
                 num_collect=callback_data.collection,
                 width=1,
-                # получаем первый список в списке pages_of_audiolist
+                # получаем первый список в списке pages_of_topiclist
                 index=previous_page)
         )
 
@@ -73,7 +79,7 @@ async def get_next_page_topic_list(callback: CallbackQuery,
         await callback.answer()
 
     else:
-        # если количетсво страниц равно номеру предыдущей, то переходим в начало
+        # если количество страниц равно номеру предыдущей, то переходим в начало
         # т.е. к 0 индексу списка (странице 1)
         await callback.message.edit_reply_markup(
             reply_markup=await inline_pagination_topics_keyboard_build(
@@ -87,9 +93,15 @@ async def get_next_page_topic_list(callback: CallbackQuery,
 @router.callback_query(SoundsCallbackFactory.filter(F.topic == 'back_topic_list'))
 async def get_previous_page_topic_list(callback: CallbackQuery,
                                        callback_data: SoundsCallbackFactory):
+    """
+    Выводит предыдущую страницу со списком тем
+    :param callback:
+    :param callback_data:
+    :return:
+    """
     # получаем имя коллекции
     collect_name = await get_collection_by_number(callback_data.collection)
-    # разбиваем спискок тем из коллекции на подсписки (страницы) максимум по 8 элементов
+    # разбиваем список тем из коллекции на подсписки (страницы) максимум по 8 элементов
     # и объединяем их в общий список
     pages_of_topiclist = await brake_list_for_8_items_list(await get_list_of_topics(collect_name))
 
@@ -104,7 +116,7 @@ async def get_previous_page_topic_list(callback: CallbackQuery,
                 topic_list=pages_of_topiclist,
                 num_collect=callback_data.collection,
                 width=1,
-                # получаем первый список в списке pages_of_audiolist
+                # получаем первый список в списке pages_of_topiclist
                 index=previous_page - 2)
         )
 
@@ -227,11 +239,11 @@ async def get_previous_page_sound_list(callback: CallbackQuery,
         )
 
 
-# отлавливает апдейт кнопи возврата к меню со списком коллекций (разделов)
+# отлавливает апдейт кнопки возврата к меню со списком коллекций (разделов)
 @router.callback_query(F.data == 'back_to_collection_menu')
 async def back_to_collection_menu(callback: CallbackQuery):
     """
-    Выводит инлайй-меню со списком коллекций
+    Выводит инлайн-меню со списком коллекций
     при нажатии кнопки "Назад" в меню списка тем
     :param callback: CallbackQuery
     :return:
@@ -268,7 +280,7 @@ async def back_to_topic_menu(callback: CallbackQuery):
     )
 
 
-# предполагается, в фильтр попает collback.data со всеми заполенными атрибутами
+# предполагается, в фильтр попадает collback.data со всеми заполненными атрибутами
 @router.callback_query(SoundsCallbackFactory.filter())
 async def get_audio_file(callback: CallbackQuery, callback_data: SoundsCallbackFactory):
     """
@@ -344,5 +356,5 @@ async def skip_waiting_from_page_num_button(callback: CallbackQuery):
     """
     await callback.answer()
 
-# отлавливает остальные апдейты от инлайн-кнопок
+
 

@@ -27,7 +27,6 @@ async def pagination_demo(inline_query: InlineQuery,
             result_audio_lst.append(inline_quer_res_voice)
     except TypeError:
         print('Ошибка TypeError. Вероятно, связано с "NoneType", т.е. переданный список audio_lst пуст.')
-        print(inline_query)
     else:
 
         # Ограничиваем результаты текущей "страницей"
@@ -42,8 +41,5 @@ async def pagination_demo(inline_query: InlineQuery,
             cache_time=0,
             next_offset=next_offset,
             switch_pm_parameter="t",
-            switch_pm_text="Audio Stickers Box"
+            switch_pm_text="АудиоМем"
         )
-
-
-
