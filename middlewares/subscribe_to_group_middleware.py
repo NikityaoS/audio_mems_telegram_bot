@@ -18,9 +18,8 @@ class SubscribeMiddleware(BaseMiddleware):
         user_id = data['event_from_user'].id
 
         from main import bot
-        item = await bot.get_chat_member(chat_id="@astib_bot", user_id=user_id)
-        print(item)
-        text = '📢 Для доступа к боту подпишитесь на канал: <a href="https://t.me/astib_bot">Audio Stickers Box</a>'
+        item = await bot.get_chat_member(chat_id="@audiomemchannel", user_id=user_id)
+        text = '📢 Для доступа к боту подпишитесь на канал: <a href="https://t.me/audiomemchannel">АудиоМем Канал</a>'
 
         if item.status == ChatMemberStatus.LEFT and event.message and event.message.text.startswith('/start'):
             await handler(event, data)
@@ -32,7 +31,6 @@ class SubscribeMiddleware(BaseMiddleware):
                 await event.callback_query.answer()
                 return
             elif event.message:
-                print(event.message.text)
                 await event.message.answer(text=text)
                 return
             elif event.inline_query:
@@ -40,7 +38,7 @@ class SubscribeMiddleware(BaseMiddleware):
                 inline_quer_res = InlineQueryResultArticle(id=result_id,
                                                            title='☝️нажмите на надпись вверху ☝️',
                                                            input_message_content=InputTextMessageContent(
-                                                               message_text='Бот аудио-стикеров <a href="https://t.me/astibbot">Audio Stickers Box</a>'
+                                                               message_text='Бот аудио-стикеров <a href="https://t.me/myaudiomembot">АудиоМем</a>'
                                                            ))
                 await event.inline_query.answer(
                     results=[inline_quer_res],

@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Dict, Any, Awaitable, Callable
 from aiogram import BaseMiddleware
 from aiogram.types import Update
-from db_logic import get_user_info_antiflood_in_redis, set_user_info_antiflood_in_redis, add_1_to_user_info_in_redis, \
+from db.db_logic import get_user_info_antiflood_in_redis, set_user_info_antiflood_in_redis, add_1_to_user_info_in_redis, \
     get_blocking_date_and_period, set_blocking_date_and_period
 
 
