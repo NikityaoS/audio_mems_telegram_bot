@@ -1,0 +1,35 @@
+version: '3'
+
+services:
+  app:
+    build: .
+    restart: always
+    ports:
+      - '80:80'
+    environment:
+      BOT_TOKEN: ${BOT_TOKEN}
+      ADMIN_ID: ${ADMIN_ID}
+      MONGO_USERNAME: ${MONGO_USERNAME}
+      MONGO_PASSWORD: ${MONGO_PASSWORD}
+      MONGO_DB: ${MONGO_DB}
+      MONGO_AUTH_MECH: ${MONGO_AUTH_MECH}
+    depends_on:
+      - mongo
+  mongo:
+    image: mongo
+    restart: always
+    ports:
+      - '27017:27017'
+    container_name: mongo
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
+      MONGO_INITDB_DATABASE: ${MONGO_DB}
+    volumes:
+      - my_data_db:/data/db
+  redis:
+    image: redis
+    restart: always
+
+volumes:
+  my_data_db:
